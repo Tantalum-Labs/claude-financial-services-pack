@@ -12,7 +12,6 @@ These plugins come in four families:
 - **Vertical plugins** — skills, slash commands, and data connectors bundled by business area (`financial-analysis`, `investment-banking`, …). Install these for `/comps`, `/dcf`, `/earnings`, and the connectors.
 - **Named agents** — autonomous, multi-step workers you hand a goal (Pitch Agent, GL Reconciler, …). Each is self-contained and bundles the skills it uses.
 - **Partner plugins** — analytics powered by LSEG and S&P Global data.
-- **Admin tooling** — `claude-for-msft-365-install` provisions the Claude Microsoft 365 add-in against your own cloud (IT admins only).
 
 ## Installation (manual upload)
 
@@ -42,12 +41,6 @@ The prebuilt zips are convenient, but you'll want to repackage a plugin after yo
 cd plugins/agent-plugins
 zip -r pitch-agent.zip pitch-agent -x '*.DS_Store'
 ```
-
-### Other ways to install
-
-- **Cowork (from this repo):** Settings → Plugins → Add plugin → paste the repo URL, then pick plugins from the marketplace list.
-- **Claude Code:** `claude plugin marketplace add <your-org>/<repo>`, then e.g. `claude plugin install financial-analysis@claude-for-financial-services`.
-- **Claude Managed Agents:** each named agent also ships as a [Managed Agent template](./managed-agent-cookbooks); deploy with `scripts/deploy-managed-agent.sh <slug>`.
 
 ## How to use these plugins
 
@@ -262,16 +255,6 @@ Analytics powered by partner data. Each requires the relevant data entitlement f
 
 **Try this:** Generate an S&P Global tear sheet for Caterpillar (CAT), then build an earnings preview for Delta Air Lines.
 
-### Admin tooling
-
-#### claude-for-msft-365-install
-
-**What it does:** Provisions the Claude Microsoft 365 add-in (Excel, Word, PowerPoint, Outlook) against your own cloud — Vertex AI, Bedrock, Azure Foundry, or an internal LLM gateway — instead of Anthropic's API. Handles manifest generation, Azure admin consent, and per-user routing config. This is a Claude Code plugin, not a Cowork agent, and is for IT admins only. **Firms using Claude directly from Anthropic's hosted service can skip this** — see [Claude for Microsoft 365](#claude-for-microsoft-365--install-tooling) below.
-
-**How to use:** Admin commands: `/claude-for-msft-365-install:setup` (wizard), `:manifest`, `:consent`, `:bootstrap`, `:update-user-attrs`, `:debug`.
-
-**Try this:** `/claude-for-msft-365-install:setup` — provision the add-in against our Bedrock deployment in us-east-1 and generate the manifest.
-
 ## Data connectors (MCP)
 
 All connectors are centralized in the **financial-analysis** core plugin and shared across the rest. MCP access may require a subscription or API key from the provider.
@@ -305,29 +288,8 @@ After editing a skill in a vertical, run `python3 scripts/sync-agent-skills.py` 
 ## Repository layout
 
 ```
-plugins/
-  agent-plugins/               # Named agents — one self-contained plugin each
-  vertical-plugins/            # Skill + command bundles by FSI vertical, plus MCP connectors
-  partner-built/               # Partner-authored plugins (LSEG, S&P Global)
-managed-agent-cookbooks/       # Claude Managed Agent cookbooks — one dir per agent
-claude-for-msft-365-install/   # Admin tooling to provision the Claude Microsoft 365 add-in
 claude-upload-packages/        # Prebuilt, ready-to-upload plugin zips (manual install)
-scripts/                       # deploy-managed-agent.sh · check.py · validate.py · orchestrate.py · sync-agent-skills.py
 ```
-
-## Claude for Microsoft 365 — install tooling
-
-If your firm runs Claude inside Excel, PowerPoint, Word, and Outlook via the Microsoft 365 add-in, [`claude-for-msft-365-install/`](./claude-for-msft-365-install) is the admin tooling to provision it against **your own cloud** — Vertex AI, Bedrock, or an internal LLM gateway — instead of Anthropic's API. It walks an IT admin through generating the customized add-in manifest, granting Azure admin consent, and writing per-user routing config via Microsoft Graph.
-
-**This is only needed for bring-your-own-cloud routing.** Firms that use Claude directly from Anthropic's hosted service can skip it — the standard add-in is deployed through the Microsoft 365 admin center, and the agents and skills here run inside it either way.
-
-## Contributing
-
-Everything here is markdown and YAML — fork, edit, PR.
-
-- New skill → add it under `plugins/vertical-plugins/<vertical>/skills/`, then run `python3 scripts/sync-agent-skills.py` to propagate to any agent that bundles it.
-- New agent → `plugins/agent-plugins/<slug>/` (with `agents/<slug>.md` + `skills/`) and a matching `managed-agent-cookbooks/<slug>/`.
-- Run `python3 scripts/check.py` before pushing — it lints every manifest, verifies all cross-file references resolve, and fails if any bundled skill has drifted from its vertical source.
 
 ## License
 
